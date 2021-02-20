@@ -10,7 +10,8 @@ class Product(Resource):
             "product":[
                 "ice-cream",
                 "chocolasdasdate",
-                "fruit"
+                "fruit",
+                "Apex Legends"
             ]
         }
 
