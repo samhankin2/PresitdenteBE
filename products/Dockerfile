@@ -1,3 +1,4 @@
 FROM python:3-onbuild
 COPY . /usr/src/app
-CMD ["python", "application.py"]
+EXPOSE 5000
+CMD ["python","-u", "application.py"]

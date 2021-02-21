@@ -1,9 +1,11 @@
 version: '3'
 
 services:
-    product-services2:
+    product-services12:
         build: './products'
         volumes:
             - ./products:/usr/src/app
         ports:
             - 5000:5000
+        environment:
+            - PYTHONUNBUFFERED:1
