@@ -14,6 +14,10 @@ class Product(Resource):
                 "ice-cre",
                 "this has updated",
                 "fruit"
+                "ice-cream",
+                "chocolasdasdate",
+                "fruit",
+                "Apex Legends"
             ]
         }
 
