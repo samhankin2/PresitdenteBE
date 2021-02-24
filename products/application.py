@@ -2,15 +2,16 @@ from flask import Flask, jsonify, request
 from flask_restful import Resource, Api, reqparse
 from flask_socketio import SocketIO
 from random import randint,shuffle
+from flask_cors import CORS
 import uuid
 
 
 
 
 app = Flask(__name__)
+CORS(app)
 api = Api(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
-
 
 
 class Player:
@@ -75,8 +76,8 @@ class Game:
             playedCardSuitIndex = suits.index(cardSuit)
             topCardSuitIndex = suits.index(topCard.suit)
 
-        if playedCardSuitIndex > topCardSuitIndex:
-            return True
+            if playedCardSuitIndex > topCardSuitIndex:
+                return True
 
         return False
 
@@ -96,13 +97,12 @@ class Game:
                 cardFound = card
       
         if cardFound:
-            print("here A", flush=True)
             if self.canPlayCard(cardNumber, cardSuit):
                 playerHand.remove(cardFound)
                 self.deck.cards.append(cardFound)
-            return
+                return True
       
-        return "Card not in your deck"
+        return False
 
 gameDict = {}
 gameDict["200"] = Game("player 1")
@@ -123,6 +123,7 @@ class JoinGame(Resource):
         username = json_data["username"]
 
         game = gameDict[gamePin]
+        print(game, flush=True)
         if not game.started:
             game.addPlayer(username)
             return 200
@@ -138,12 +139,20 @@ class StartGame(Resource):
         game.started = True
         game.shuffleDeck()
         game.dealCards()
-        # Give someones go
 
-        player = game.players[0]
-        hand = []
-        for card in player.hand:
-            hand.append((card.number, card.suit))
+
+        for player in game.players:
+            print(player.username, flush=True)
+            hand = []
+            for card in player.hand:
+                hand.append((card.number, card.suit))
+            socketio.emit(player.username+"started", hand)
+
+
+        
+        print("here b", flush=True)
+        # socketio.emit('startGame')
+
 
         return hand
 
@@ -158,15 +167,26 @@ class PlayCard(Resource):
         print(username, flush=True)
 
         game = gameDict[gamePin]
-        game.playCard(username, playedCard["number"], playedCard["suit"])
+        if game.playCard(username, playedCard["number"], playedCard["suit"]):
 
-        hand = []
-        player = game.players[0]
+            playerFound = None
+            for player in game.players:
+                if player.username == username:
+                    playerFound = player
+                    break
 
-        for card in player.hand:
-            hand.append((card.number, card.suit))
+            hand = []
+            for card in playerFound.hand:
+                hand.append((card.number, card.suit))
 
-        return hand
+            print(hand, flush=True)
+
+            socketio.emit("playedCard",  [playedCard["number"], playedCard["suit"]])
+
+
+            return hand
+
+        return 400
 
 
 
@@ -177,11 +197,9 @@ class PlayCard(Resource):
 
 class Test(Resource):
     def get(self):
-        json.dump(game('test'))
-        # Deal cards
-        # Give someones go
-
-        return 200
+        return {
+            "apex":"legends"
+        }
 
 
 
